@@ -1,4 +1,3 @@
-yaml
 name: Streak Keeper
 
 on:
@@ -49,4 +48,3 @@ jobs:
           git commit -m "chore: keep streak alive ($TODAY)"
 
           git push origin HEAD:${GITHUB_REF_NAME}
-```
