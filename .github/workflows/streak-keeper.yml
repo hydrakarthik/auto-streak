@@ -1,11 +1,10 @@
+```yaml
 name: Streak Keeper
 
-# Runs every day at 17:15 UTC = 10:45 PM IST.
-# If no commit was made in this repo today, it makes a "streak" commit.
 on:
   schedule:
     - cron: "15 17 * * *"
-  workflow_dispatch: {} # lets you run it manually from the Actions tab
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -13,37 +12,41 @@ permissions:
 jobs:
   keep-streak:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # full history so we can check today's commits
+          fetch-depth: 0
 
       - name: Commit only if no commit today
         run: |
-          # Timezone for "today" check — IST
           export TZ="Asia/Kolkata"
 
           TODAY=$(date +%Y-%m-%d)
           echo "Today (IST): $TODAY"
 
-          # Count commits made today (any author)
-          COMMITS_TODAY=$(git log --since="$TODAY 00:00:00" --until="$TODAY 23:59:59" --oneline | wc -l)
+          COMMITS_TODAY=$(git log \
+            --since="$TODAY 00:00:00" \
+            --until="$TODAY 23:59:59" \
+            --oneline | wc -l)
+
           echo "Commits found today: $COMMITS_TODAY"
 
           if [ "$COMMITS_TODAY" -gt 0 ]; then
-            echo "A commit already exists today. Nothing to do."
+            echo "A commit already exists today."
             exit 0
           fi
 
-          echo "No commit today — creating a streak commit."
+          echo "Creating streak commit."
 
-          # Real change: append today's date to the streak log
           echo "$(date '+%Y-%m-%d %H:%M:%S %Z') - streak kept" >> streak-log.txt
 
-          git config user.name "${{ secrets.GIT_USER_NAME }}"
-          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add streak-log.txt
           git commit -m "chore: keep streak alive ($TODAY)"
-          git push
+
+          git push origin HEAD:${GITHUB_REF_NAME}
+```
